@@ -1,0 +1,1 @@
+# haishin-bingo
