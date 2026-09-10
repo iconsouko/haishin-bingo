@@ -6,6 +6,10 @@ const MODE_COLORS: Record<string, { base: string; free: string; border: string; 
   theme: { base: 'rgba(245,185,66,0.93)', free: 'rgba(255,111,89,0.96)', border: '#F5B942', text: '#1E1B29' },
 }
 
+/** 「済み」を示す共通カラー（モードの色と被らない緑系） */
+const CHECK_COLOR = '#2FD68C'
+const CHECK_ICON_COLOR = '#0B3B2E'
+
 /** 日本語混じりのテキストを、指定幅に収まるよう1文字単位で折り返す */
 function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   const lines: string[] = []
@@ -21,6 +25,26 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
   }
   if (current) lines.push(current)
   return lines
+}
+
+/** 背景画像がcover表示のとき、枠からはみ出さない範囲にオフセットを収める */
+export function clampBackgroundOffset(
+  image: HTMLImageElement,
+  canvasWidth: number,
+  canvasHeight: number,
+  transform: BackgroundTransform
+): BackgroundTransform {
+  const baseScale = Math.max(canvasWidth / image.width, canvasHeight / image.height)
+  const scale = baseScale * transform.scale
+  const drawWidth = image.width * scale
+  const drawHeight = image.height * scale
+  const maxOffsetX = Math.max(0, (drawWidth - canvasWidth) / 2)
+  const maxOffsetY = Math.max(0, (drawHeight - canvasHeight) / 2)
+  return {
+    ...transform,
+    offsetX: Math.min(maxOffsetX, Math.max(-maxOffsetX, transform.offsetX)),
+    offsetY: Math.min(maxOffsetY, Math.max(-maxOffsetY, transform.offsetY)),
+  }
 }
 
 /** 背景画像をcover表示＋オフセット/倍率で描画する（未設定時はダークグラデーション） */
@@ -59,6 +83,7 @@ export function drawBackground(
  * ビンゴカードを描画する。
  * layout.xPct / yPct はキャンバス幅・高さそれぞれに対する比率、
  * layout.sizePct はキャンバス幅に対する一辺の比率（正方形）。
+ * チェック済みのマスは、文字が読めるよう明るいオーバーレイ＋枠線＋角バッジで表現する。
  */
 export function drawBingoCard(
   ctx: CanvasRenderingContext2D,
@@ -99,6 +124,13 @@ export function drawBingoCard(
     roundRect(ctx, cx, cy, cellSize, cellSize, cellRadius)
     ctx.stroke()
 
+    // チェック済み：文字の可読性を保つため、まず明るいオーバーレイを重ねる
+    if (cell.checked) {
+      ctx.fillStyle = 'rgba(255,255,255,0.45)'
+      roundRect(ctx, cx, cy, cellSize, cellSize, cellRadius)
+      ctx.fill()
+    }
+
     // テキスト
     ctx.fillStyle = colors.text
     ctx.textAlign = 'center'
@@ -125,9 +157,75 @@ export function drawBingoCard(
     lines.forEach((line, li) => {
       ctx.fillText(line, cx + cellSize / 2, startY + li * lineHeight)
     })
+
+    // チェック済み：太い枠線 ＋ 角のチェックマークバッジ（テキストの上に重ねて最後に描画）
+    if (cell.checked) {
+      ctx.strokeStyle = CHECK_COLOR
+      ctx.lineWidth = Math.max(2, cellSize * 0.045)
+      roundRect(ctx, cx, cy, cellSize, cellSize, cellRadius)
+      ctx.stroke()
+
+      const badgeR = cellSize * 0.14
+      const badgeX = cx + cellSize - badgeR * 0.9
+      const badgeY = cy + badgeR * 0.9
+
+      ctx.beginPath()
+      ctx.arc(badgeX, badgeY, badgeR, 0, Math.PI * 2)
+      ctx.fillStyle = CHECK_COLOR
+      ctx.fill()
+      ctx.lineWidth = Math.max(1, badgeR * 0.15)
+      ctx.strokeStyle = '#FFFFFF'
+      ctx.stroke()
+
+      ctx.strokeStyle = CHECK_ICON_COLOR
+      ctx.lineWidth = Math.max(1.5, badgeR * 0.28)
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
+      ctx.beginPath()
+      ctx.moveTo(badgeX - badgeR * 0.45, badgeY + badgeR * 0.05)
+      ctx.lineTo(badgeX - badgeR * 0.1, badgeY + badgeR * 0.4)
+      ctx.lineTo(badgeX + badgeR * 0.5, badgeY - badgeR * 0.35)
+      ctx.stroke()
+    }
   })
 
   ctx.restore()
+}
+
+/** キャンバス内座標(px)から、タップされたマスのインデックスを求める（指のズレに寛容な判定） */
+export function hitTestCell(
+  px: number,
+  py: number,
+  canvasWidth: number,
+  canvasHeight: number,
+  layout: CardLayout,
+  size: number
+): number | null {
+  const originX = layout.xPct * canvasWidth
+  const originY = layout.yPct * canvasHeight
+  const boxSize = layout.sizePct * canvasWidth
+  const margin = boxSize * 0.04
+
+  if (
+    px < originX - margin ||
+    px > originX + boxSize + margin ||
+    py < originY - margin ||
+    py > originY + boxSize + margin
+  ) {
+    return null
+  }
+
+  const gap = boxSize * 0.02
+  const cellSize = (boxSize - gap * (size + 1)) / size
+  const localX = px - originX
+  const localY = py - originY
+
+  let col = Math.floor((localX - gap / 2) / (cellSize + gap))
+  let row = Math.floor((localY - gap / 2) / (cellSize + gap))
+  col = Math.min(size - 1, Math.max(0, col))
+  row = Math.min(size - 1, Math.max(0, row))
+
+  return row * size + col
 }
 
 function roundRect(

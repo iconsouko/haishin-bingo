@@ -1,12 +1,16 @@
 import { useState } from 'react'
-import type { BingoCard, BingoCondition, BingoMode, GridSize } from './types'
-import { generateBingoCard } from './utils/bingoGenerator'
+import type { BackgroundTransform, BingoCard, BingoCondition, BingoMode, CardLayout, GridSize } from './types'
+import { generateBingoCard, resetChecks, toggleCellChecked } from './utils/bingoGenerator'
 import { StepHeader } from './components/StepHeader'
 import { ModeSelect } from './components/ModeSelect'
 import { ConditionPanel } from './components/ConditionPanel'
 import { Composer } from './components/Composer'
+import { BingoChecker } from './components/BingoChecker'
 
-type Step = 0 | 1 | 2
+type Step = 0 | 1 | 2 | 3
+
+const DEFAULT_LAYOUT: CardLayout = { xPct: 0.25, yPct: 0.15, sizePct: 0.5 }
+const DEFAULT_BG_TRANSFORM: BackgroundTransform = { offsetX: 0, offsetY: 0, scale: 1 }
 
 export default function App() {
   const [step, setStep] = useState<Step>(0)
@@ -14,6 +18,10 @@ export default function App() {
   const [size, setSize] = useState<GridSize>(5)
   const [freeSpace, setFreeSpace] = useState(true)
   const [card, setCard] = useState<BingoCard | null>(null)
+
+  const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null)
+  const [bgTransform, setBgTransform] = useState<BackgroundTransform>(DEFAULT_BG_TRANSFORM)
+  const [layout, setLayout] = useState<CardLayout>(DEFAULT_LAYOUT)
 
   const handleGenerate = () => {
     if (!mode) return
@@ -25,6 +33,14 @@ export default function App() {
   const handleRegenerate = () => {
     if (!card) return
     setCard(generateBingoCard(card.condition))
+  }
+
+  const handleToggleCell = (key: string) => {
+    setCard((prev) => (prev ? toggleCellChecked(prev, key) : prev))
+  }
+
+  const handleResetChecks = () => {
+    setCard((prev) => (prev ? resetChecks(prev) : prev))
   }
 
   return (
@@ -55,8 +71,28 @@ export default function App() {
         <Composer
           card={card}
           mode={mode}
+          bgImage={bgImage}
+          setBgImage={setBgImage}
+          bgTransform={bgTransform}
+          setBgTransform={setBgTransform}
+          layout={layout}
+          setLayout={setLayout}
           onRegenerate={handleRegenerate}
           onBack={() => setStep(1)}
+          onConfirm={() => setStep(3)}
+        />
+      )}
+
+      {step === 3 && card && mode && (
+        <BingoChecker
+          card={card}
+          mode={mode}
+          bgImage={bgImage}
+          bgTransform={bgTransform}
+          layout={layout}
+          onToggleCell={handleToggleCell}
+          onResetChecks={handleResetChecks}
+          onBackToAdjust={() => setStep(2)}
         />
       )}
     </div>

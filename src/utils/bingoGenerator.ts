@@ -33,6 +33,20 @@ function drawItems(mode: BingoMode, count: number): NetaItem[] {
   return drawn
 }
 
+export function toggleCellChecked(card: BingoCard, key: string): BingoCard {
+  return {
+    ...card,
+    cells: card.cells.map((c) => (c.key === key ? { ...c, checked: !c.checked } : c)),
+  }
+}
+
+export function resetChecks(card: BingoCard): BingoCard {
+  return {
+    ...card,
+    cells: card.cells.map((c) => ({ ...c, checked: c.isFree })),
+  }
+}
+
 export function generateBingoCard(condition: BingoCondition): BingoCard {
   const { mode, size, freeSpace } = condition
   const totalCells = size * size
@@ -46,10 +60,10 @@ export function generateBingoCard(condition: BingoCondition): BingoCard {
   let cursor = 0
   for (let i = 0; i < totalCells; i++) {
     if (i === centerIndex) {
-      cells.push({ key: `free-${i}`, text: '自由選曲', isFree: true })
+      cells.push({ key: `free-${i}`, text: '自由選曲', isFree: true, checked: true })
     } else {
       const item = items[cursor++]
-      cells.push({ key: item.id, text: item.text, isFree: false })
+      cells.push({ key: item.id, text: item.text, isFree: false, checked: false })
     }
   }
 

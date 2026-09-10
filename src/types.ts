@@ -22,6 +22,7 @@ export interface BingoCell {
   key: string
   text: string
   isFree: boolean
+  checked: boolean
 }
 
 export interface BingoCondition {

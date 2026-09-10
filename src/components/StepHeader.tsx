@@ -1,4 +1,4 @@
-const STEPS = ['モード選択', '条件設定', '背景と合成']
+const STEPS = ['モード選択', '条件設定', '背景と配置', '配信中チェック']
 
 export function StepHeader({ current }: { current: number }) {
   return (

@@ -1,30 +1,39 @@
 import { useEffect, useRef, useState } from 'react'
 import type { BackgroundTransform, BingoCard, BingoMode, CardLayout } from '../types'
 import { AVOID_ZONES, CANVAS_HEIGHT, CANVAS_WIDTH, TEMPLATE_IMAGE_SRC, rectsOverlap } from '../data/templateGuide'
-import { drawBackground, drawBingoCard } from '../utils/canvasCompose'
+import { clampBackgroundOffset, drawBackground, drawBingoCard } from '../utils/canvasCompose'
 import { AdjustControls } from './AdjustControls'
 import { MODE_MAP } from '../data/modes'
-
-const DEFAULT_LAYOUT: CardLayout = { xPct: 0.25, yPct: 0.15, sizePct: 0.5 }
 
 export function Composer({
   card,
   mode,
+  bgImage,
+  setBgImage,
+  bgTransform,
+  setBgTransform,
+  layout,
+  setLayout,
   onRegenerate,
   onBack,
+  onConfirm,
 }: {
   card: BingoCard
   mode: BingoMode
+  bgImage: HTMLImageElement | null
+  setBgImage: (img: HTMLImageElement | null) => void
+  bgTransform: BackgroundTransform
+  setBgTransform: (updater: (prev: BackgroundTransform) => BackgroundTransform) => void
+  layout: CardLayout
+  setLayout: (updater: (prev: CardLayout) => CardLayout) => void
   onRegenerate: () => void
   onBack: () => void
+  onConfirm: () => void
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const displayRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null)
-  const [bgTransform, setBgTransform] = useState<BackgroundTransform>({ offsetX: 0, offsetY: 0, scale: 1 })
-  const [layout, setLayout] = useState<CardLayout>(DEFAULT_LAYOUT)
   const [showGuide, setShowGuide] = useState(true)
   const [dragging, setDragging] = useState(false)
   const lastPointer = useRef<{ x: number; y: number } | null>(null)
@@ -55,7 +64,7 @@ export function Composer({
       const img = new Image()
       img.onload = () => {
         setBgImage(img)
-        setBgTransform({ offsetX: 0, offsetY: 0, scale: 1 })
+        setBgTransform(() => ({ offsetX: 0, offsetY: 0, scale: 1 }))
       }
       img.src = reader.result as string
     }
@@ -76,26 +85,21 @@ export function Composer({
   }
 
   const onPointerMove = (e: React.PointerEvent) => {
-    if (!dragging || !lastPointer.current) return
+    if (!dragging || !lastPointer.current || !bgImage) return
     const scaleFactor = getScaleFactor()
     const dx = (e.clientX - lastPointer.current.x) * scaleFactor
     const dy = (e.clientY - lastPointer.current.y) * scaleFactor
     lastPointer.current = { x: e.clientX, y: e.clientY }
-    setBgTransform((prev) => ({ ...prev, offsetX: prev.offsetX + dx, offsetY: prev.offsetY + dy }))
+    setBgTransform((prev) => {
+      const next = { ...prev, offsetX: prev.offsetX + dx, offsetY: prev.offsetY + dy }
+      // 背景が枠からはみ出して隙間ができないよう常にクランプする
+      return clampBackgroundOffset(bgImage, CANVAS_WIDTH, CANVAS_HEIGHT, next)
+    })
   }
 
   const onPointerUp = () => {
     setDragging(false)
     lastPointer.current = null
-  }
-
-  const handleDownload = () => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const link = document.createElement('a')
-    link.download = `配信ビンゴ_${modeInfo.shortName}.png`
-    link.href = canvas.toDataURL('image/png')
-    link.click()
   }
 
   return (
@@ -116,10 +120,13 @@ export function Composer({
         </button>
       </div>
 
+      {/* プレビュー：スワイプでのページスクロールを妨げないよう、
+          縦方向のパン(pan-y)はブラウザ標準の挙動に任せる。
+          背景ドラッグはpointer移動で処理する（画像未設定時はドラッグ無効）。 */}
       <div
         ref={displayRef}
-        className="relative mt-5 w-full touch-none select-none overflow-hidden rounded-ticket border-2 border-stage-line bg-stage-panel"
-        style={{ aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}` }}
+        className="relative mt-5 w-full select-none overflow-hidden rounded-ticket border-2 border-stage-line bg-stage-panel"
+        style={{ aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}`, touchAction: 'pan-y' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -151,7 +158,12 @@ export function Composer({
         </p>
       )}
 
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      {/* プレビューのすぐ下に配置調整UIを置き、見ながら操作できるようにする */}
+      <div className="mt-4 rounded-ticket border-2 border-dashed border-stage-line p-5">
+        <AdjustControls layout={layout} setLayout={setLayout} />
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-center gap-3">
         <button
           onClick={() => fileInputRef.current?.click()}
           className="rounded-full bg-teal px-5 py-2.5 text-sm font-bold text-stage-ink"
@@ -179,33 +191,12 @@ export function Composer({
         </label>
       </div>
 
-      {bgImage && (
-        <div className="mt-4">
-          <p className="mb-2 text-xs text-stage-line">背景の拡大・縮小</p>
-          <input
-            type="range"
-            min={1}
-            max={2.5}
-            step={0.01}
-            value={bgTransform.scale}
-            onChange={(e) =>
-              setBgTransform((prev) => ({ ...prev, scale: parseFloat(e.target.value) }))
-            }
-            className="h-2 w-full max-w-xs accent-teal"
-          />
-        </div>
-      )}
-
-      <div className="mt-8 rounded-ticket border-2 border-dashed border-stage-line p-5">
-        <AdjustControls layout={layout} setLayout={setLayout} />
-      </div>
-
       <div className="mt-8 flex justify-end">
         <button
-          onClick={handleDownload}
+          onClick={onConfirm}
           className="rounded-full bg-coral px-8 py-3 font-bold text-stage-ink"
         >
-          配信用背景としてダウンロード
+          この配置で確定してチェックを始める →
         </button>
       </div>
     </section>
