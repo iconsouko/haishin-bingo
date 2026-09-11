@@ -283,7 +283,7 @@ export function Composer({
       <div className="mt-6 flex items-center gap-3 rounded-ticket border-2 border-teal/40 bg-teal/10 px-5 py-4">
         <span className="text-2xl">💾</span>
         <p className="text-sm leading-relaxed text-paper">
-          画像のダウンロードは、次の<span className="font-bold text-teal">「④配信中チェック」</span>画面で行います。
+          画像のダウンロードは、次の<span className="font-bold text-teal">④画面</span>で行います。
         </p>
       </div>
 
