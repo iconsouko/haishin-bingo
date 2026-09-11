@@ -22,6 +22,7 @@ export default function App() {
   const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null)
   const [bgTransform, setBgTransform] = useState<BackgroundTransform>(DEFAULT_BG_TRANSFORM)
   const [layout, setLayout] = useState<CardLayout>(DEFAULT_LAYOUT)
+  const [letterboxColor, setLetterboxColor] = useState<'white' | 'black'>('white')
 
   const handleGenerate = () => {
     if (!mode) return
@@ -78,6 +79,8 @@ export default function App() {
           setBgTransform={setBgTransform}
           layout={layout}
           setLayout={setLayout}
+          letterboxColor={letterboxColor}
+          setLetterboxColor={setLetterboxColor}
           onRegenerate={handleRegenerate}
           onBack={() => setStep(1)}
           onConfirm={() => setStep(3)}
@@ -91,6 +94,7 @@ export default function App() {
           bgImage={bgImage}
           bgTransform={bgTransform}
           layout={layout}
+          letterboxColor={letterboxColor}
           onToggleCell={handleToggleCell}
           onResetChecks={handleResetChecks}
           onBackToAdjust={() => setStep(2)}
