@@ -38,8 +38,11 @@ export function clampBackgroundOffset(
   const scale = baseScale * transform.scale
   const drawWidth = image.width * scale
   const drawHeight = image.height * scale
-  const maxOffsetX = Math.max(0, (drawWidth - canvasWidth) / 2)
-  const maxOffsetY = Math.max(0, (drawHeight - canvasHeight) / 2)
+  // 画像が枠より大きい場合は「はみ出しすぎて隙間ができない範囲」、
+  // 画像が枠より小さい場合（縮小表示で余白がある場合）は「余白の範囲内でスライドできる範囲」を許容する。
+  // どちらの場合も、動かせる範囲は「枠と画像の差の半分」で表せるため、絶対値を使う。
+  const maxOffsetX = Math.abs(drawWidth - canvasWidth) / 2
+  const maxOffsetY = Math.abs(drawHeight - canvasHeight) / 2
   return {
     ...transform,
     offsetX: Math.min(maxOffsetX, Math.max(-maxOffsetX, transform.offsetX)),
