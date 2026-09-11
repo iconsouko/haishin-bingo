@@ -15,7 +15,7 @@ const DEFAULT_BG_TRANSFORM: BackgroundTransform = { offsetX: 0, offsetY: 0, scal
 export default function App() {
   const [step, setStep] = useState<Step>(0)
   const [mode, setMode] = useState<BingoMode | null>(null)
-  const [size, setSize] = useState<GridSize>(5)
+  const [size, setSize] = useState<GridSize>(3)
   const [freeSpace, setFreeSpace] = useState(true)
   const [card, setCard] = useState<BingoCard | null>(null)
 
