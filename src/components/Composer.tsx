@@ -54,13 +54,10 @@ export function Composer({
   onConfirm: () => void
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const displayRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [showGuide, setShowGuide] = useState(true)
-  const [dragging, setDragging] = useState(false)
   const [adjustTarget, setAdjustTarget] = useState<'card' | 'background'>('card')
-  const lastPointer = useRef<{ x: number; y: number } | null>(null)
 
   const modeInfo = MODE_MAP[mode]
 
@@ -98,36 +95,6 @@ export function Composer({
       img.src = reader.result as string
     }
     reader.readAsDataURL(file)
-  }
-
-  const getScaleFactor = () => {
-    const el = displayRef.current
-    if (!el) return 1
-    return CANVAS_WIDTH / el.clientWidth
-  }
-
-  const onPointerDown = (e: React.PointerEvent) => {
-    if (!bgImage) return
-    setDragging(true)
-    lastPointer.current = { x: e.clientX, y: e.clientY }
-    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
-  }
-
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (!dragging || !lastPointer.current || !bgImage) return
-    const scaleFactor = getScaleFactor()
-    const dx = (e.clientX - lastPointer.current.x) * scaleFactor
-    const dy = (e.clientY - lastPointer.current.y) * scaleFactor
-    lastPointer.current = { x: e.clientX, y: e.clientY }
-    setBgTransform((prev) => {
-      const next = { ...prev, offsetX: prev.offsetX + dx, offsetY: prev.offsetY + dy }
-      return clampBackgroundOffset(bgImage, CANVAS_WIDTH, CANVAS_HEIGHT, next)
-    })
-  }
-
-  const onPointerUp = () => {
-    setDragging(false)
-    lastPointer.current = null
   }
 
   // ── 調整UI（背景／ビンゴカード共有）の実処理 ──
@@ -189,18 +156,9 @@ export function Composer({
         </button>
       </div>
 
-      {/* プレビュー：スワイプでのページスクロールを妨げないよう、
-          縦方向のパン(pan-y)はブラウザ標準の挙動に任せる。
-          背景ドラッグはpointer移動で処理する（画像未設定時はドラッグ無効）。 */}
-      <div
-        ref={displayRef}
-        className="relative mt-5 w-full select-none overflow-hidden rounded-ticket border-2 border-stage-line bg-stage-panel"
-        style={{ aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}`, touchAction: 'pan-y' }}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerLeave={onPointerUp}
-      >
+      {/* プレビュー：誤操作でズレないよう、タップ／ドラッグでの直接操作は行わない（純粋な表示のみ）。
+          位置・サイズ調整は下の矢印ボタン／スライダーで行う。 */}
+      <div className="relative mt-5 w-full overflow-hidden rounded-ticket border-2 border-stage-line bg-stage-panel" style={{ aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}` }}>
         <canvas
           ref={canvasRef}
           width={CANVAS_WIDTH}
@@ -243,8 +201,8 @@ export function Composer({
         </p>
       )}
 
-      {/* プレビューのすぐ下に配置調整UIを置き、見ながら操作できるようにする */}
-      <div className="mt-4 rounded-ticket border-2 border-dashed border-stage-line p-5">
+      {/* 調整パネル：矢印ボタン／スライダー／背景設定を1枚のパネルにまとめてすっきりさせる */}
+      <div className="mt-4 space-y-5 rounded-ticket border-2 border-stage-line bg-stage-panel p-5">
         <AdjustControls
           target={adjustTarget}
           onChangeTarget={setAdjustTarget}
@@ -258,70 +216,78 @@ export function Composer({
           sizeButtonStep={adjustTarget === 'background' ? BG_SCALE_STEP : CARD_SIZE_STEP}
           onResize={adjustTarget === 'background' ? resizeBackground : resizeCard}
         />
-      </div>
 
-      <div className="mt-6 flex flex-wrap items-center gap-3">
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="rounded-full bg-teal px-5 py-2.5 text-sm font-bold text-stage-ink"
-        >
-          背景画像をアップロード
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/png,image/jpeg"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0]
-            if (file) handleFile(file)
-          }}
-        />
-        <label className="flex items-center gap-2 text-sm text-muted">
-          <input
-            type="checkbox"
-            checked={showGuide}
-            onChange={(e) => setShowGuide(e.target.checked)}
-            className="h-4 w-4 accent-teal"
-          />
-          配置ガイドを表示
-        </label>
-      </div>
+        <div className="h-px bg-stage-line" />
 
-      {bgImage && (
-        <div className="mt-4 flex flex-wrap items-center gap-4">
+        <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={handleFitWhole}
-            className="rounded-full border-2 border-stage-line px-4 py-2 text-xs text-paper hover:border-paper/60"
+            onClick={() => fileInputRef.current?.click()}
+            className="rounded-full bg-teal px-4 py-2 text-xs font-bold text-stage-ink"
           >
-            📐 画像全体を収める（トリミングなし）
+            {bgImage ? '🔄 背景画像を変更' : '🖼 背景画像をアップロード'}
           </button>
-          <div className="flex items-center gap-2 text-xs text-muted">
-            余白の色：
-            <button
-              onClick={() => setLetterboxColor('white')}
-              aria-label="余白を白にする"
-              className={
-                'h-6 w-6 rounded-full border-2 bg-white ' +
-                (letterboxColor === 'white' ? 'border-coral' : 'border-stage-line')
-              }
-            />
-            <button
-              onClick={() => setLetterboxColor('black')}
-              aria-label="余白を黒にする"
-              className={
-                'h-6 w-6 rounded-full border-2 bg-black ' +
-                (letterboxColor === 'black' ? 'border-coral' : 'border-stage-line')
-              }
-            />
-          </div>
-        </div>
-      )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) handleFile(file)
+            }}
+          />
 
-      <div className="mt-8 flex flex-col items-end gap-2">
-        <p className="text-xs text-muted">
-          完成した背景画像は、次の「④配信中チェック」の画面でダウンロードできます。
+          {bgImage && (
+            <button
+              onClick={handleFitWhole}
+              className="rounded-full border border-stage-line px-4 py-2 text-xs text-paper hover:border-paper/60"
+            >
+              📐 全体を収める
+            </button>
+          )}
+
+          {bgImage && (
+            <div className="flex items-center gap-1.5 rounded-full border border-stage-line px-3 py-1.5">
+              <span className="text-xs text-muted">余白</span>
+              <button
+                onClick={() => setLetterboxColor('white')}
+                aria-label="余白を白にする"
+                className={
+                  'h-5 w-5 rounded-full border-2 bg-white ' +
+                  (letterboxColor === 'white' ? 'border-coral' : 'border-stage-line')
+                }
+              />
+              <button
+                onClick={() => setLetterboxColor('black')}
+                aria-label="余白を黒にする"
+                className={
+                  'h-5 w-5 rounded-full border-2 bg-black ' +
+                  (letterboxColor === 'black' ? 'border-coral' : 'border-stage-line')
+                }
+              />
+            </div>
+          )}
+
+          <label className="ml-auto flex items-center gap-2 text-xs text-muted">
+            <input
+              type="checkbox"
+              checked={showGuide}
+              onChange={(e) => setShowGuide(e.target.checked)}
+              className="h-4 w-4 accent-teal"
+            />
+            ガイド表示
+          </label>
+        </div>
+      </div>
+
+      <div className="mt-6 flex items-center gap-3 rounded-ticket border-2 border-teal/40 bg-teal/10 px-5 py-4">
+        <span className="text-2xl">💾</span>
+        <p className="text-sm leading-relaxed text-paper">
+          画像のダウンロードは、次の<span className="font-bold text-teal">「④配信中チェック」</span>画面で行います。
         </p>
+      </div>
+
+      <div className="mt-6 flex justify-end">
         <button
           onClick={onConfirm}
           className="rounded-full bg-coral px-8 py-3 font-bold text-stage-ink"

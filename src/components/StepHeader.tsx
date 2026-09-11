@@ -1,12 +1,23 @@
+import { useTheme } from '../utils/useTheme'
+
 const STEPS = ['モード選択', '条件設定', '背景と配置', '配信中チェック']
 
 export function StepHeader({ current }: { current: number }) {
+  const { theme, toggleTheme } = useTheme()
+
   return (
     <header className="w-full">
       <div className="mx-auto flex max-w-3xl items-center justify-between px-6 pt-8">
         <h1 className="font-display text-2xl tracking-wide text-paper sm:text-3xl">
           配信ビンゴさん
         </h1>
+        <button
+          onClick={toggleTheme}
+          aria-label="ライト/ダークモード切替"
+          className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-stage-line bg-stage-panel text-base"
+        >
+          {theme === 'dark' ? '🌙' : '☀️'}
+        </button>
       </div>
       <div className="mx-auto mt-4 flex max-w-3xl items-center gap-2 px-6">
         {STEPS.map((label, i) => {

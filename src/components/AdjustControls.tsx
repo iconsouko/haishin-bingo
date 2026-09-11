@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useHoldRepeat } from '../utils/useHoldRepeat'
 
 type Target = 'card' | 'background'
@@ -13,18 +14,33 @@ function HoldButton({
   className: string
   ariaLabel: string
 }) {
-  const handlers = useHoldRepeat(onFire)
+  const { start, release } = useHoldRepeat(onFire)
+  const btnRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    const el = btnRef.current
+    if (!el) return
+    // { passive: false } で登録することで、確実にpreventDefault()を効かせ、
+    // iOSの長押しコールアウト（選択メニュー等）による中断を防ぐ
+    const handleTouchStart = (e: TouchEvent) => {
+      e.preventDefault()
+      start()
+    }
+    el.addEventListener('touchstart', handleTouchStart, { passive: false })
+    return () => el.removeEventListener('touchstart', handleTouchStart)
+  }, [start])
+
   return (
     <button
+      ref={btnRef}
       type="button"
       aria-label={ariaLabel}
       className={'no-select select-none ' + className}
-      onTouchStart={handlers.onTouchStart}
-      onTouchEnd={handlers.onTouchEnd}
-      onTouchCancel={handlers.onTouchCancel}
-      onMouseDown={handlers.onMouseDown}
-      onMouseUp={handlers.onMouseUp}
-      onMouseLeave={handlers.onMouseLeave}
+      onTouchEnd={release}
+      onTouchCancel={release}
+      onMouseDown={start}
+      onMouseUp={release}
+      onMouseLeave={release}
     >
       {children}
     </button>
