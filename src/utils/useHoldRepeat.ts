@@ -3,13 +3,14 @@ import { useCallback, useRef } from 'react'
 /**
  * ボタンの「1タップ＝1回実行」「長押し＝連続実行」を扱うフック。
  *
- * iOS Safari / Chrome(iOS) を含む幅広い環境で確実に動作させるため、
- * Pointer Eventsではなく、最も互換性の高い touch系 / mouse系イベントを
- * それぞれ個別に処理する（タッチ端末ではtouch系のみが有効になり、
- * 続けて発火する合成マウスイベントは実害がない範囲で無視される）。
- *
  * ・指/ボタンを離すまで何も実行しない（離した時点でタップとみなし1回実行）
  * ・一定時間(delayMs)以上押し続けたら、そこから一定間隔(intervalMs)で連続実行に切り替える
+ *
+ * start/release の生関数を返すだけにしてあるのは、呼び出し側（HoldButton）で
+ * touchstart を { passive: false } の生のイベントリスナーとして登録するため。
+ * Reactの合成イベント(onTouchStart)は環境によってpassive指定になり、
+ * preventDefault()が効かず、iOS Safariの長押しコールアウトに割り込まれて
+ * 連続実行が途中で止まってしまうことがあるための対策。
  */
 export function useHoldRepeat(action: () => void, intervalMs = 90, delayMs = 350) {
   const timeoutRef = useRef<number | null>(null)
@@ -50,16 +51,5 @@ export function useHoldRepeat(action: () => void, intervalMs = 90, delayMs = 350
     repeatingRef.current = false
   }, [action, clearTimers])
 
-  return {
-    onTouchStart: (e: React.TouchEvent) => {
-      // タッチ後に発火する合成マウスイベント（mousedown等）を抑止する
-      e.preventDefault()
-      start()
-    },
-    onTouchEnd: release,
-    onTouchCancel: release,
-    onMouseDown: start,
-    onMouseUp: release,
-    onMouseLeave: release,
-  }
+  return { start, release }
 }
