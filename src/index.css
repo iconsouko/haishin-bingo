@@ -2,6 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* ダークモード（デフォルト） */
+  --color-stage-ink: 20 19 28;
+  --color-stage-panel: 29 27 41;
+  --color-stage-line: 51 47 68;
+  --color-paper: 250 247 241;
+  --color-ink: 30 27 41;
+  --color-muted: 199 194 214;
+
+  --color-coral: 255 111 89;
+  --color-coral-soft: 255 220 211;
+  --color-teal: 47 182 166;
+  --color-teal-soft: 211 242 237;
+  --color-gold: 245 185 66;
+  --color-gold-soft: 251 231 190;
+}
+
+/* ライトモード：<html>に .theme-light が付くと、同じクラス名のまま配色だけ切り替わる */
+html.theme-light {
+  --color-stage-ink: 250 247 241;
+  --color-stage-panel: 255 255 255;
+  --color-stage-line: 224 219 232;
+  --color-paper: 30 27 41;
+  --color-muted: 96 90 112;
+}
+
 html,
 body,
 #root {
@@ -11,13 +37,19 @@ body,
 body {
   font-family: 'Zen Kaku Gothic New', sans-serif;
   -webkit-font-smoothing: antialiased;
+  background-color: rgb(var(--color-stage-ink));
+  color: rgb(var(--color-paper));
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* 十字ボタン・サイズボタンなどの長押しで文字が選択されるのを防ぐ */
+/* 十字ボタン・サイズボタンなどの長押しで文字が選択されたり、
+   iOSのコールアウトメニュー（長押しで出る半透明メニュー）が
+   長押し連続操作を妨げたりするのを防ぐ */
 .no-select {
   -webkit-user-select: none;
   user-select: none;
   touch-action: none;
+  -webkit-touch-callout: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
