@@ -1,28 +1,38 @@
 /** @type {import('tailwindcss').Config} */
+
+function withOpacity(varName) {
+  return ({ opacityValue }) => {
+    if (opacityValue !== undefined) {
+      return `rgb(var(${varName}) / ${opacityValue})`
+    }
+    return `rgb(var(${varName}))`
+  }
+}
+
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
         stage: {
-          ink: '#14131C',
-          panel: '#1D1B29',
-          line: '#332F44',
+          ink: withOpacity('--color-stage-ink'),
+          panel: withOpacity('--color-stage-panel'),
+          line: withOpacity('--color-stage-line'),
         },
-        paper: '#FAF7F1',
-        ink: '#1E1B29',
-        muted: '#C7C2D6',
+        paper: withOpacity('--color-paper'),
+        ink: withOpacity('--color-ink'),
+        muted: withOpacity('--color-muted'),
         coral: {
-          DEFAULT: '#FF6F59',
-          soft: '#FFDCD3',
+          DEFAULT: withOpacity('--color-coral'),
+          soft: withOpacity('--color-coral-soft'),
         },
         teal: {
-          DEFAULT: '#2FB6A6',
-          soft: '#D3F2ED',
+          DEFAULT: withOpacity('--color-teal'),
+          soft: withOpacity('--color-teal-soft'),
         },
         gold: {
-          DEFAULT: '#F5B942',
-          soft: '#FBE7BE',
+          DEFAULT: withOpacity('--color-gold'),
+          soft: withOpacity('--color-gold-soft'),
         },
       },
       fontFamily: {
