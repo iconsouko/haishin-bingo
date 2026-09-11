@@ -4,7 +4,7 @@ import { useHoldRepeat } from '../utils/useHoldRepeat'
 const MOVE_STEP = 0.02
 const SIZE_STEP = 0.01
 const MIN_SIZE = 0.28
-const MAX_SIZE = 0.78
+const MAX_SIZE = 0.92
 
 function HoldButton({
   onFire,

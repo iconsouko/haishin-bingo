@@ -191,7 +191,10 @@ export function Composer({
         </label>
       </div>
 
-      <div className="mt-8 flex justify-end">
+      <div className="mt-8 flex flex-col items-end gap-2">
+        <p className="text-xs text-stage-line">
+          完成した背景画像は、次の「④配信中チェック」の画面でダウンロードできます。
+        </p>
         <button
           onClick={onConfirm}
           className="rounded-full bg-coral px-8 py-3 font-bold text-stage-ink"
