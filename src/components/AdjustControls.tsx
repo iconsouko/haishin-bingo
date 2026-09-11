@@ -1,7 +1,7 @@
 import type { CardLayout } from '../types'
 import { useHoldRepeat } from '../utils/useHoldRepeat'
 
-const MOVE_STEP = 0.012
+const MOVE_STEP = 0.02
 const SIZE_STEP = 0.01
 const MIN_SIZE = 0.28
 const MAX_SIZE = 0.78
@@ -20,12 +20,15 @@ function HoldButton({
   const handlers = useHoldRepeat(onFire)
   return (
     <button
+      type="button"
       aria-label={ariaLabel}
       className={'no-select select-none ' + className}
-      onPointerDown={handlers.onPointerDown}
-      onPointerUp={handlers.onPointerUp}
-      onPointerLeave={handlers.onPointerLeave}
-      onPointerCancel={handlers.onPointerCancel}
+      onTouchStart={handlers.onTouchStart}
+      onTouchEnd={handlers.onTouchEnd}
+      onTouchCancel={handlers.onTouchCancel}
+      onMouseDown={handlers.onMouseDown}
+      onMouseUp={handlers.onMouseUp}
+      onMouseLeave={handlers.onMouseLeave}
     >
       {children}
     </button>
@@ -63,32 +66,25 @@ export function AdjustControls({
     })
 
   const btn =
-    'flex h-11 w-11 items-center justify-center rounded-full bg-stage-panel border-2 border-stage-line text-paper text-lg active:bg-coral active:text-stage-ink active:border-coral'
+    'flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-stage-panel border-2 border-stage-line text-paper text-xl active:bg-coral active:text-stage-ink active:border-coral'
 
   return (
-    <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+    <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p className="mb-2 text-xs text-stage-line">位置調整</p>
-        <div className="grid w-fit grid-cols-3 gap-1">
-          <div />
+        <div className="flex items-center gap-2">
           <HoldButton ariaLabel="上へ移動" className={btn} onFire={() => moveClamped(0, -MOVE_STEP)}>
             ↑
           </HoldButton>
-          <div />
-          <HoldButton ariaLabel="左へ移動" className={btn} onFire={() => moveClamped(-MOVE_STEP, 0)}>
-            ←
-          </HoldButton>
-          <div className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-dashed border-stage-line text-stage-line">
-            ＋
-          </div>
-          <HoldButton ariaLabel="右へ移動" className={btn} onFire={() => moveClamped(MOVE_STEP, 0)}>
-            →
-          </HoldButton>
-          <div />
           <HoldButton ariaLabel="下へ移動" className={btn} onFire={() => moveClamped(0, MOVE_STEP)}>
             ↓
           </HoldButton>
-          <div />
+          <HoldButton ariaLabel="左へ移動" className={btn} onFire={() => moveClamped(-MOVE_STEP, 0)}>
+            ←
+          </HoldButton>
+          <HoldButton ariaLabel="右へ移動" className={btn} onFire={() => moveClamped(MOVE_STEP, 0)}>
+            →
+          </HoldButton>
         </div>
       </div>
 

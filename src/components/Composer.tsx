@@ -196,7 +196,7 @@ export function Composer({
           onClick={onConfirm}
           className="rounded-full bg-coral px-8 py-3 font-bold text-stage-ink"
         >
-          この配置で確定してチェックを始める →
+          ビンゴ開始！
         </button>
       </div>
     </section>
