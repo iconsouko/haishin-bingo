@@ -49,9 +49,10 @@ export default function App() {
 
       {step === 0 && (
         <ModeSelect
-          selected={mode}
-          onSelect={(m) => setMode(m)}
-          onNext={() => setStep(1)}
+          onSelectMode={(m) => {
+            setMode(m)
+            setStep(1)
+          }}
         />
       )}
 
