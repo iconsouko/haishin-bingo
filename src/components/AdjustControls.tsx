@@ -1,10 +1,6 @@
-import type { CardLayout } from '../types'
 import { useHoldRepeat } from '../utils/useHoldRepeat'
 
-const MOVE_STEP = 0.02
-const SIZE_STEP = 0.01
-const MIN_SIZE = 0.28
-const MAX_SIZE = 0.92
+type Target = 'card' | 'background'
 
 function HoldButton({
   onFire,
@@ -35,77 +31,108 @@ function HoldButton({
   )
 }
 
+/**
+ * 位置(十字ボタン)・サイズ(スライダー＋±ボタン)の調整UI。
+ * 「背景画像」と「ビンゴカード」のどちらを操作対象にするかを切り替えて、
+ * 同じ矢印キー／スライダーを共有する。
+ */
 export function AdjustControls({
-  layout,
-  setLayout,
+  target,
+  onChangeTarget,
+  backgroundAvailable,
+  moveStep,
+  onMove,
+  sizeValue,
+  sizeMin,
+  sizeMax,
+  sizeSliderStep,
+  sizeButtonStep,
+  onResize,
 }: {
-  layout: CardLayout
-  setLayout: (updater: (prev: CardLayout) => CardLayout) => void
+  target: Target
+  onChangeTarget: (t: Target) => void
+  backgroundAvailable: boolean
+  moveStep: number
+  onMove: (dx: number, dy: number) => void
+  sizeValue: number
+  sizeMin: number
+  sizeMax: number
+  sizeSliderStep: number
+  sizeButtonStep: number
+  onResize: (delta: number) => void
 }) {
-  const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
-
-  // xPct/yPctは左上基準。移動自体は制限せず、キャンバス外に出過ぎない範囲まで許容する（重なりは警告で通知）。
-  const moveClamped = (dx: number, dy: number) =>
-    setLayout((prev) => ({
-      ...prev,
-      xPct: clamp(prev.xPct + dx, -prev.sizePct * 0.3, 1 - prev.sizePct * 0.7),
-      yPct: clamp(prev.yPct + dy, -prev.sizePct * 0.3, 1 - prev.sizePct * 0.7),
-    }))
-
-  const resize = (delta: number) =>
-    setLayout((prev) => {
-      const nextSize = clamp(prev.sizePct + delta, MIN_SIZE, MAX_SIZE)
-      // 中心を保ったまま拡縮する
-      const centerX = prev.xPct + prev.sizePct / 2
-      const centerY = prev.yPct + prev.sizePct / 2
-      return {
-        sizePct: nextSize,
-        xPct: centerX - nextSize / 2,
-        yPct: centerY - nextSize / 2,
-      }
-    })
-
   const btn =
     'flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-stage-panel border-2 border-stage-line text-paper text-xl active:bg-coral active:text-stage-ink active:border-coral'
 
+  const targetBtn = (t: Target, label: string) =>
+    'flex-1 rounded-full px-3 py-2 text-xs font-bold transition-colors ' +
+    (target === t
+      ? 'bg-coral text-stage-ink'
+      : 'bg-stage-panel text-muted border border-stage-line') +
+    (t === 'background' && !backgroundAvailable ? ' opacity-40' : '')
+
   return (
-    <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <p className="mb-2 text-xs text-stage-line">位置調整</p>
-        <div className="flex items-center gap-2">
-          <HoldButton ariaLabel="上へ移動" className={btn} onFire={() => moveClamped(0, -MOVE_STEP)}>
-            ↑
-          </HoldButton>
-          <HoldButton ariaLabel="下へ移動" className={btn} onFire={() => moveClamped(0, MOVE_STEP)}>
-            ↓
-          </HoldButton>
-          <HoldButton ariaLabel="左へ移動" className={btn} onFire={() => moveClamped(-MOVE_STEP, 0)}>
-            ←
-          </HoldButton>
-          <HoldButton ariaLabel="右へ移動" className={btn} onFire={() => moveClamped(MOVE_STEP, 0)}>
-            →
-          </HoldButton>
-        </div>
+    <div>
+      <div className="mb-4 flex gap-2">
+        <button
+          type="button"
+          disabled={!backgroundAvailable}
+          onClick={() => onChangeTarget('background')}
+          className={targetBtn('background', '背景')}
+        >
+          🖼 背景を調整
+        </button>
+        <button
+          type="button"
+          onClick={() => onChangeTarget('card')}
+          className={targetBtn('card', 'ビンゴ')}
+        >
+          🎯 ビンゴカードを調整
+        </button>
       </div>
 
-      <div className="flex-1">
-        <p className="mb-2 text-xs text-stage-line">サイズ調整</p>
-        <div className="flex items-center gap-3">
-          <HoldButton ariaLabel="縮小" className={btn} onFire={() => resize(-SIZE_STEP)}>
-            −
-          </HoldButton>
-          <input
-            type="range"
-            min={MIN_SIZE}
-            max={MAX_SIZE}
-            step={0.005}
-            value={layout.sizePct}
-            onChange={(e) => resize(parseFloat(e.target.value) - layout.sizePct)}
-            className="h-2 flex-1 accent-coral"
-          />
-          <HoldButton ariaLabel="拡大" className={btn} onFire={() => resize(SIZE_STEP)}>
-            ＋
-          </HoldButton>
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="mb-2 text-xs text-muted">
+            位置調整（{target === 'background' ? '背景画像' : 'ビンゴカード'}）
+          </p>
+          <div className="flex items-center gap-2">
+            <HoldButton ariaLabel="上へ移動" className={btn} onFire={() => onMove(0, -moveStep)}>
+              ↑
+            </HoldButton>
+            <HoldButton ariaLabel="下へ移動" className={btn} onFire={() => onMove(0, moveStep)}>
+              ↓
+            </HoldButton>
+            <HoldButton ariaLabel="左へ移動" className={btn} onFire={() => onMove(-moveStep, 0)}>
+              ←
+            </HoldButton>
+            <HoldButton ariaLabel="右へ移動" className={btn} onFire={() => onMove(moveStep, 0)}>
+              →
+            </HoldButton>
+          </div>
+        </div>
+
+        <div className="flex-1">
+          <p className="mb-2 text-xs text-muted">
+            サイズ調整（{target === 'background' ? '背景の拡大率' : 'ビンゴカード'}）
+          </p>
+          <div className="flex items-center gap-3">
+            <HoldButton ariaLabel="縮小" className={btn} onFire={() => onResize(-sizeButtonStep)}>
+              −
+            </HoldButton>
+            <input
+              type="range"
+              min={sizeMin}
+              max={sizeMax}
+              step={sizeSliderStep}
+              value={sizeValue}
+              onChange={(e) => onResize(parseFloat(e.target.value) - sizeValue)}
+              className="h-2 flex-1 accent-coral"
+            />
+            <HoldButton ariaLabel="拡大" className={btn} onFire={() => onResize(sizeButtonStep)}>
+              ＋
+            </HoldButton>
+          </div>
         </div>
       </div>
     </div>

@@ -22,14 +22,14 @@ export function StepHeader({ current }: { current: number }) {
                       ? 'bg-coral text-stage-ink'
                       : done
                       ? 'bg-teal text-stage-ink'
-                      : 'bg-stage-panel text-stage-line')
+                      : 'bg-stage-panel text-muted')
                   }
                 >
                   {i + 1}
                 </span>
                 <span
                   className={
-                    'hidden text-sm sm:inline ' + (active ? 'text-paper' : 'text-stage-line')
+                    'hidden text-sm sm:inline ' + (active ? 'text-paper' : 'text-muted')
                   }
                 >
                   {label}

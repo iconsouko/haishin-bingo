@@ -26,11 +26,11 @@ export function ConditionPanel({
 
   return (
     <section className="mx-auto w-full max-w-3xl px-6 py-10">
-      <button onClick={onBack} className="text-sm text-stage-line hover:text-paper">
+      <button onClick={onBack} className="text-sm text-muted hover:text-paper">
         ← モードを選び直す
       </button>
 
-      <p className="mt-4 text-sm text-stage-line">
+      <p className="mt-4 text-sm text-muted">
         選択中：<span className="font-bold text-paper">{modeInfo.name}</span>
       </p>
 
@@ -45,7 +45,7 @@ export function ConditionPanel({
                 'flex h-20 w-20 flex-col items-center justify-center rounded-2xl border-2 font-bold transition-colors ' +
                 (size === s
                   ? 'border-coral bg-coral/10 text-paper'
-                  : 'border-stage-line text-stage-line hover:border-paper/40')
+                  : 'border-stage-line text-muted hover:border-paper/40')
               }
             >
               <span className="text-xl">{s}×{s}</span>
@@ -64,7 +64,7 @@ export function ConditionPanel({
             onChange={(e) => onChangeFreeSpace(e.target.checked)}
             className="h-5 w-5 accent-coral"
           />
-          <span className={freeSpaceDisabled ? 'text-stage-line' : 'text-paper'}>
+          <span className={freeSpaceDisabled ? 'text-muted' : 'text-paper'}>
             {freeSpaceDisabled ? '偶数マスでは使用できません（3×3 / 5×5で選択可）' : '中央マスを自由選曲にする'}
           </span>
         </label>

@@ -47,13 +47,19 @@ export function clampBackgroundOffset(
   }
 }
 
-/** 背景画像をcover表示＋オフセット/倍率で描画する（未設定時はダークグラデーション） */
+/**
+ * 背景画像をcover基準の倍率＋オフセットで描画する。
+ * scaleが1未満（＝全体を収める方向）の場合、画像がキャンバス全体を覆いきらず
+ * 上下または左右に余白ができることがあるため、その部分は letterboxColor で塗りつぶす。
+ * 画像が未設定の場合はダークグラデーションのプレースホルダーを表示する。
+ */
 export function drawBackground(
   ctx: CanvasRenderingContext2D,
   canvasWidth: number,
   canvasHeight: number,
   image: HTMLImageElement | null,
-  transform: BackgroundTransform
+  transform: BackgroundTransform,
+  letterboxColor: string = '#FFFFFF'
 ) {
   ctx.save()
   ctx.clearRect(0, 0, canvasWidth, canvasHeight)
@@ -68,6 +74,10 @@ export function drawBackground(
     return
   }
 
+  // 画像がキャンバス全面を覆わない場合に備え、先に余白の色で塗っておく
+  ctx.fillStyle = letterboxColor
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+
   const baseScale = Math.max(canvasWidth / image.width, canvasHeight / image.height)
   const scale = baseScale * transform.scale
   const drawWidth = image.width * scale
@@ -77,6 +87,17 @@ export function drawBackground(
 
   ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight)
   ctx.restore()
+}
+
+/** 画像全体をキャンバス内に収める（トリミングなし）ときの transform.scale 値を求める */
+export function getContainScale(
+  image: HTMLImageElement,
+  canvasWidth: number,
+  canvasHeight: number
+): number {
+  const baseScale = Math.max(canvasWidth / image.width, canvasHeight / image.height)
+  const containAbsoluteScale = Math.min(canvasWidth / image.width, canvasHeight / image.height)
+  return containAbsoluteScale / baseScale
 }
 
 /**

@@ -11,6 +11,7 @@ export function BingoChecker({
   bgImage,
   bgTransform,
   layout,
+  letterboxColor,
   onToggleCell,
   onResetChecks,
   onBackToAdjust,
@@ -20,6 +21,7 @@ export function BingoChecker({
   bgImage: HTMLImageElement | null
   bgTransform: BackgroundTransform
   layout: CardLayout
+  letterboxColor: 'white' | 'black'
   onToggleCell: (key: string) => void
   onResetChecks: () => void
   onBackToAdjust: () => void
@@ -36,9 +38,9 @@ export function BingoChecker({
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    drawBackground(ctx, CANVAS_WIDTH, CANVAS_HEIGHT, bgImage, bgTransform)
+    drawBackground(ctx, CANVAS_WIDTH, CANVAS_HEIGHT, bgImage, bgTransform, letterboxColor === 'white' ? '#FFFFFF' : '#000000')
     drawBingoCard(ctx, CANVAS_WIDTH, CANVAS_HEIGHT, card, layout)
-  }, [bgImage, bgTransform, card, layout])
+  }, [bgImage, bgTransform, card, layout, letterboxColor])
 
   const handleTap = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current
@@ -67,7 +69,7 @@ export function BingoChecker({
   return (
     <section className="mx-auto w-full max-w-3xl px-6 py-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <button onClick={onBackToAdjust} className="text-sm text-stage-line hover:text-paper">
+        <button onClick={onBackToAdjust} className="text-sm text-muted hover:text-paper">
           ← 配置を編集し直す
         </button>
         <span className="rounded-full bg-stage-panel px-4 py-1.5 text-sm text-paper">
@@ -75,7 +77,7 @@ export function BingoChecker({
         </span>
       </div>
 
-      <p className="mt-4 text-sm leading-relaxed text-stage-line">
+      <p className="mt-4 text-sm leading-relaxed text-muted">
         歌い終わったら、マスをタップしてチェックを付けてください。配置調整はロック中なので、誤操作でずれる心配はありません。
       </p>
 

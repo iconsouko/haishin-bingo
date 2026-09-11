@@ -11,6 +11,7 @@ export default {
         },
         paper: '#FAF7F1',
         ink: '#1E1B29',
+        muted: '#C7C2D6',
         coral: {
           DEFAULT: '#FF6F59',
           soft: '#FFDCD3',
