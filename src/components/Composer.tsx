@@ -84,13 +84,19 @@ export function Composer({
     drawBingoCard(ctx, CANVAS_WIDTH, CANVAS_HEIGHT, card, layout)
   }, [bgImage, bgTransform, card, layout, letterboxColor])
 
+  const getDefaultTransform = (img: HTMLImageElement): BackgroundTransform => ({
+    offsetX: 0,
+    offsetY: 0,
+    scale: getContainScale(img, CANVAS_WIDTH, CANVAS_HEIGHT),
+  })
+
   const handleFile = (file: File) => {
     const reader = new FileReader()
     reader.onload = () => {
       const img = new Image()
       img.onload = () => {
         setBgImage(img)
-        setBgTransform(() => ({ offsetX: 0, offsetY: 0, scale: 1 }))
+        setBgTransform(() => getDefaultTransform(img))
       }
       img.src = reader.result as string
     }
@@ -132,10 +138,9 @@ export function Composer({
     })
   }
 
-  const handleFitWhole = () => {
+  const handleResetBackground = () => {
     if (!bgImage) return
-    const containScale = getContainScale(bgImage, CANVAS_WIDTH, CANVAS_HEIGHT)
-    setBgTransform(() => ({ offsetX: 0, offsetY: 0, scale: containScale }))
+    setBgTransform(() => getDefaultTransform(bgImage))
   }
 
   return (
@@ -239,10 +244,10 @@ export function Composer({
 
           {bgImage && (
             <button
-              onClick={handleFitWhole}
+              onClick={handleResetBackground}
               className="rounded-full border border-stage-line px-4 py-2 text-xs text-paper hover:border-paper/60"
             >
-              📐 全体を収める
+              ↩️ 元の位置に戻す
             </button>
           )}
 
