@@ -32,7 +32,7 @@ export const PHONE_SAFE_MARGIN_X = 0.2
 
 export const AVOID_ZONES: AvoidZone[] = [
   { label: '上部アイコン・名前帯', x: 0.0, y: 0.0, w: 1.0, h: 0.14 },
-  { label: '下部：歌詞欄・コメント・入力欄', x: 0.0, y: 0.79, w: 1.0, h: 0.21 },
+  { label: '下部：歌詞欄・コメント・入力欄', x: 0.0, y: 0.73, w: 1.0, h: 0.27 },
 ]
 
 /** 矩形同士が重なっているか判定 */
