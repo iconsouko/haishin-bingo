@@ -75,7 +75,7 @@ export function ConditionPanel({
           onClick={onGenerate}
           className="rounded-full bg-coral px-8 py-3 font-bold text-stage-ink"
         >
-          ビンゴカードを作成する
+          カスタム背景を作る →
         </button>
       </div>
     </section>
