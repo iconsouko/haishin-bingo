@@ -33,6 +33,7 @@ export function Composer({
   setBgTransform,
   layout,
   setLayout,
+  defaultLayout,
   letterboxColor,
   setLetterboxColor,
   onRegenerate,
@@ -47,6 +48,7 @@ export function Composer({
   setBgTransform: (updater: (prev: BackgroundTransform) => BackgroundTransform) => void
   layout: CardLayout
   setLayout: (updater: (prev: CardLayout) => CardLayout) => void
+  defaultLayout: CardLayout
   letterboxColor: 'white' | 'black'
   setLetterboxColor: (c: 'white' | 'black') => void
   onRegenerate: () => void
@@ -69,10 +71,8 @@ export function Composer({
   }
   const overlapping = AVOID_ZONES.some((zone) => rectsOverlap(cardRectFraction, zone))
 
-  // 背景アップロード時、対象を自動的に「背景」に切り替える
-  useEffect(() => {
-    if (bgImage) setAdjustTarget('background')
-  }, [bgImage])
+  // 背景アップロード時に自動で対象を切り替えると、意図せず背景側の操作画面になってしまうため、
+  // 対象の切り替えはユーザーの明示的な操作のみで行う（デフォルトは常に「ビンゴカード」）
 
   // 再描画
   useEffect(() => {
@@ -141,6 +141,10 @@ export function Composer({
   const handleResetBackground = () => {
     if (!bgImage) return
     setBgTransform(() => getDefaultTransform(bgImage))
+  }
+
+  const handleResetCard = () => {
+    setLayout(() => defaultLayout)
   }
 
   return (
@@ -248,23 +252,16 @@ export function Composer({
           sizeSliderStep={adjustTarget === 'background' ? 0.01 : 0.005}
           sizeButtonStep={adjustTarget === 'background' ? BG_SCALE_STEP : CARD_SIZE_STEP}
           onResize={adjustTarget === 'background' ? resizeBackground : resizeCard}
+          onReset={adjustTarget === 'background' ? handleResetBackground : handleResetCard}
         />
 
         <div className="h-px bg-stage-line" />
 
-        <div className="flex flex-wrap items-center gap-2">
-          {bgImage && (
-            <button
-              onClick={handleResetBackground}
-              className="rounded-full border border-stage-line px-4 py-2 text-xs text-paper hover:border-paper/60"
-            >
-              ↩️ 元の位置に戻す
-            </button>
-          )}
-
-          {bgImage && (
-            <div className="flex items-center gap-1.5 rounded-full border border-stage-line px-3 py-1.5">
-              <span className="text-xs text-muted">余白</span>
+        {bgImage && (
+          <div>
+            <p className="mb-2 text-xs font-bold text-muted">🖼 背景画像の設定</p>
+            <div className="flex items-center gap-1.5 rounded-full border border-stage-line px-3 py-1.5 w-fit">
+              <span className="text-xs text-muted">余白の色</span>
               <button
                 onClick={() => setLetterboxColor('white')}
                 aria-label="余白を白にする"
@@ -282,18 +279,18 @@ export function Composer({
                 }
               />
             </div>
-          )}
+          </div>
+        )}
 
-          <label className="ml-auto flex items-center gap-2 text-xs text-muted">
-            <input
-              type="checkbox"
-              checked={showGuide}
-              onChange={(e) => setShowGuide(e.target.checked)}
-              className="h-4 w-4 accent-teal"
-            />
-            ガイド表示
-          </label>
-        </div>
+        <label className="flex items-center gap-2 text-xs text-muted">
+          <input
+            type="checkbox"
+            checked={showGuide}
+            onChange={(e) => setShowGuide(e.target.checked)}
+            className="h-4 w-4 accent-teal"
+          />
+          配置ガイドを表示（配信画面UI・スマホの見切れ範囲）
+        </label>
       </div>
 
       <p className="mt-6 mb-2 text-xs font-bold text-muted">③ 準備ができたら次へ</p>
@@ -309,7 +306,7 @@ export function Composer({
           onClick={onConfirm}
           className="rounded-full bg-coral px-8 py-3 font-bold text-stage-ink"
         >
-          ビンゴ開始！
+          完成 →
         </button>
       </div>
     </section>
