@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { BackgroundTransform, BingoCard, BingoCondition, BingoMode, CardLayout, GridSize } from './types'
 import { generateBingoCard, resetChecks, toggleCellChecked } from './utils/bingoGenerator'
 import { StepHeader } from './components/StepHeader'
@@ -23,6 +23,11 @@ export default function App() {
   const [bgTransform, setBgTransform] = useState<BackgroundTransform>(DEFAULT_BG_TRANSFORM)
   const [layout, setLayout] = useState<CardLayout>(DEFAULT_LAYOUT)
   const [letterboxColor, setLetterboxColor] = useState<'white' | 'black'>('white')
+
+  // 画面が切り替わるたびにページ上部へ戻し、案内文を読み飛ばさないようにする
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [step])
 
   const handleGenerate = () => {
     if (!mode) return
@@ -79,6 +84,7 @@ export default function App() {
           setBgTransform={setBgTransform}
           layout={layout}
           setLayout={setLayout}
+          defaultLayout={DEFAULT_LAYOUT}
           letterboxColor={letterboxColor}
           setLetterboxColor={setLetterboxColor}
           onRegenerate={handleRegenerate}
