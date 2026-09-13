@@ -80,7 +80,7 @@ export function BingoChecker({
       <div className="mt-4 space-y-1.5 rounded-ticket border-2 border-stage-line bg-stage-panel p-4 text-sm leading-relaxed text-muted">
         <p><span className="font-bold text-paper">①</span> まず「📥 今の状態を保存する」で画像を保存し、ColorSingのカスタム背景に設定してください</p>
         <p><span className="font-bold text-paper">②</span> 配信中、歌い終わった曲のマスをタップしてチェック</p>
-        <p><span className="font-bold text-paper">③</span> チェックするたびに保存し直せば、進捗入りの背景に更新できます（配置調整はロック中のため、誤操作でずれる心配はありません）</p>
+        <p><span className="font-bold text-paper">③</span> チェックするたびに保存し直せば、進捗入りの背景に更新できます</p>
       </div>
 
       <div
