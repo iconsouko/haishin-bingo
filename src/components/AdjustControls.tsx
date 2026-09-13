@@ -64,6 +64,7 @@ export function AdjustControls({
   sizeSliderStep,
   sizeButtonStep,
   onResize,
+  onReset,
 }: {
   target: Target
   onChangeTarget: (t: Target) => void
@@ -76,6 +77,7 @@ export function AdjustControls({
   sizeSliderStep: number
   sizeButtonStep: number
   onResize: (delta: number) => void
+  onReset: () => void
 }) {
   const btn =
     'flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-stage-panel border-2 border-stage-line text-paper text-xl active:bg-coral active:text-stage-ink active:border-coral'
@@ -151,6 +153,14 @@ export function AdjustControls({
           </div>
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={onReset}
+        className="mt-4 rounded-full border border-stage-line px-4 py-2 text-xs text-paper hover:border-paper/60"
+      >
+        ↩️ {target === 'background' ? '背景画像' : 'ビンゴカード'}を元の位置に戻す
+      </button>
     </div>
   )
 }
