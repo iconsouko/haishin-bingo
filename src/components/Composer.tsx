@@ -161,6 +161,33 @@ export function Composer({
         </button>
       </div>
 
+      {/* ① まずは背景画像をアップロード：気づいてもらえるよう最上部に配置し、未アップロード時はふんわり点滅させる */}
+      <div className="mt-6 rounded-ticket border-2 border-teal/40 bg-teal/10 p-5 text-center">
+        <p className="mb-3 text-xs font-bold text-teal">① まずは背景画像をアップロード</p>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className={
+            'rounded-full bg-teal px-8 py-3 text-sm font-bold text-stage-ink shadow-lg shadow-teal/30 ' +
+            (bgImage ? '' : 'animate-pulse')
+          }
+        >
+          {bgImage ? '🔄 背景画像を変更' : '🖼 背景画像をアップロード'}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/png,image/jpeg"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) handleFile(file)
+          }}
+        />
+        {!bgImage && (
+          <p className="mt-2 text-xs text-muted">配信で使いたい画像を選んでください（JPG/PNG）</p>
+        )}
+      </div>
+
       {/* プレビュー：誤操作でズレないよう、タップ／ドラッグでの直接操作は行わない（純粋な表示のみ）。
           位置・サイズ調整は下の矢印ボタン／スライダーで行う。 */}
       <div className="relative mt-5 w-full overflow-hidden rounded-ticket border-2 border-stage-line bg-stage-panel" style={{ aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}` }}>
@@ -207,7 +234,8 @@ export function Composer({
       )}
 
       {/* 調整パネル：矢印ボタン／スライダー／背景設定を1枚のパネルにまとめてすっきりさせる */}
-      <div className="mt-4 space-y-5 rounded-ticket border-2 border-stage-line bg-stage-panel p-5">
+      <p className="mt-6 mb-2 text-xs font-bold text-muted">② 位置・サイズを調整</p>
+      <div className="space-y-5 rounded-ticket border-2 border-stage-line bg-stage-panel p-5">
         <AdjustControls
           target={adjustTarget}
           onChangeTarget={setAdjustTarget}
@@ -225,23 +253,6 @@ export function Composer({
         <div className="h-px bg-stage-line" />
 
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="rounded-full bg-teal px-4 py-2 text-xs font-bold text-stage-ink"
-          >
-            {bgImage ? '🔄 背景画像を変更' : '🖼 背景画像をアップロード'}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/png,image/jpeg"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) handleFile(file)
-            }}
-          />
-
           {bgImage && (
             <button
               onClick={handleResetBackground}
@@ -285,7 +296,8 @@ export function Composer({
         </div>
       </div>
 
-      <div className="mt-6 flex items-center gap-3 rounded-ticket border-2 border-teal/40 bg-teal/10 px-5 py-4">
+      <p className="mt-6 mb-2 text-xs font-bold text-muted">③ 準備ができたら次へ</p>
+      <div className="flex items-center gap-3 rounded-ticket border-2 border-teal/40 bg-teal/10 px-5 py-4">
         <span className="text-2xl">💾</span>
         <p className="text-sm leading-relaxed text-paper">
           画像のダウンロードは、次の<span className="font-bold text-teal">④画面</span>で行います。
