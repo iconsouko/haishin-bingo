@@ -9,7 +9,7 @@ import { BingoChecker } from './components/BingoChecker'
 
 type Step = 0 | 1 | 2 | 3
 
-const DEFAULT_LAYOUT: CardLayout = { xPct: 0.125, yPct: 0.16, sizePct: 0.75 }
+const DEFAULT_LAYOUT: CardLayout = { xPct: 0.2, yPct: 0.155, sizePct: 0.6 }
 const DEFAULT_BG_TRANSFORM: BackgroundTransform = { offsetX: 0, offsetY: 0, scale: 1 }
 
 export default function App() {
